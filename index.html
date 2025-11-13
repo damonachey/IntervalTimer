@@ -175,13 +175,13 @@
             z-index: 9999;
             transition: background-color 0.5s;
         }
-        .fullscreen-timer.warmup {
+        .fullscreen-timer.prepare {
             background-color: #ffc107;
         }
         .fullscreen-timer.work {
             background-color: #28a745;
         }
-        .fullscreen-timer.rest {
+        .fullscreen-timer.break {
             background-color: #2196f3;
         }
         .fullscreen-timer.cooldown {
@@ -352,11 +352,11 @@
         <button id="settings-button">⚙</button>
     </div>
     <div id="timers-container"></div>
-    
+
     <div id="settings-overlay" class="settings-overlay">
         <div class="settings-panel">
             <div class="settings-title">Default Settings</div>
-            
+
             <div class="settings-row">
                 <div class="settings-label">SETS</div>
                 <div class="settings-control">
@@ -365,7 +365,7 @@
                     <button class="settings-button" id="sets-inc">+</button>
                 </div>
             </div>
-            
+
             <div class="settings-row">
                 <div class="settings-label">WORK</div>
                 <div class="settings-control">
@@ -374,16 +374,16 @@
                     <button class="settings-button" id="work-inc">+</button>
                 </div>
             </div>
-            
+
             <div class="settings-row">
-                <div class="settings-label">REST</div>
+                <div class="settings-label">BREAK</div>
                 <div class="settings-control">
-                    <button class="settings-button" id="rest-dec">−</button>
-                    <div class="settings-value" id="rest-value"></div>
-                    <button class="settings-button" id="rest-inc">+</button>
+                    <button class="settings-button" id="break-dec">−</button>
+                    <div class="settings-value" id="break-value"></div>
+                    <button class="settings-button" id="break-inc">+</button>
                 </div>
             </div>
-            
+
             <div class="settings-row">
                 <div class="settings-label">PREPARE</div>
                 <div class="settings-control">
@@ -392,7 +392,7 @@
                     <button class="settings-button" id="prepare-inc">+</button>
                 </div>
             </div>
-            
+
             <div class="settings-row">
                 <div class="settings-label">COOLDOWN</div>
                 <div class="settings-control">
@@ -401,7 +401,7 @@
                     <button class="settings-button" id="cooldown-inc">+</button>
                 </div>
             </div>
-            
+
             <div class="settings-buttons">
                 <button class="settings-cancel" id="settings-cancel">Cancel</button>
                 <button class="settings-save" id="settings-save">Save</button>
@@ -416,8 +416,8 @@
             sets: 1,
             workMinutes: 0,
             workSeconds: 30,
-            restMinutes: 0,
-            restSeconds: 15,
+            breakMinutes: 0,
+            breakSeconds: 15,
             prepareSeconds: 5,
             cooldownSeconds: 5
         };
@@ -425,7 +425,7 @@
         // Update settings display
         function updateSettingsDisplay() {
             document.getElementById('sets-value').textContent = defaultSettings.sets;
-            
+
             // Update work time with clickable parts
             const workValue = document.getElementById('work-value');
             workValue.innerHTML = '';
@@ -456,38 +456,38 @@
             workValue.appendChild(workMinSpan);
             workValue.appendChild(document.createTextNode(' : '));
             workValue.appendChild(workSecSpan);
-            
-            // Update rest time with clickable parts
-            const restValue = document.getElementById('rest-value');
-            restValue.innerHTML = '';
-            const restMinSpan = document.createElement('span');
-            restMinSpan.className = 'settings-time-part';
-            restMinSpan.textContent = String(defaultSettings.restMinutes).padStart(2, '0');
-            restMinSpan.addEventListener('click', (e) => {
+
+            // Update break time with clickable parts
+            const breakValue = document.getElementById('break-value');
+            breakValue.innerHTML = '';
+            const breakMinSpan = document.createElement('span');
+            breakMinSpan.className = 'settings-time-part';
+            breakMinSpan.textContent = String(defaultSettings.breakMinutes).padStart(2, '0');
+            breakMinSpan.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const newValue = prompt('Enter rest minutes:', defaultSettings.restMinutes);
+                const newValue = prompt('Enter break minutes:', defaultSettings.breakMinutes);
                 const parsed = parseInt(newValue);
                 if (newValue !== null && !isNaN(parsed) && parsed >= 0) {
-                    defaultSettings.restMinutes = parsed;
+                    defaultSettings.breakMinutes = parsed;
                     updateSettingsDisplay();
                 }
             });
-            const restSecSpan = document.createElement('span');
-            restSecSpan.className = 'settings-time-part';
-            restSecSpan.textContent = String(defaultSettings.restSeconds).padStart(2, '0');
-            restSecSpan.addEventListener('click', (e) => {
+            const breakSecSpan = document.createElement('span');
+            breakSecSpan.className = 'settings-time-part';
+            breakSecSpan.textContent = String(defaultSettings.breakSeconds).padStart(2, '0');
+            breakSecSpan.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const newValue = prompt('Enter rest seconds:', defaultSettings.restSeconds);
+                const newValue = prompt('Enter break seconds:', defaultSettings.breakSeconds);
                 const parsed = parseInt(newValue);
                 if (newValue !== null && !isNaN(parsed) && parsed >= 0 && parsed < 60) {
-                    defaultSettings.restSeconds = parsed;
+                    defaultSettings.breakSeconds = parsed;
                     updateSettingsDisplay();
                 }
             });
-            restValue.appendChild(restMinSpan);
-            restValue.appendChild(document.createTextNode(' : '));
-            restValue.appendChild(restSecSpan);
-            
+            breakValue.appendChild(breakMinSpan);
+            breakValue.appendChild(document.createTextNode(' : '));
+            breakValue.appendChild(breakSecSpan);
+
             document.getElementById('prepare-value').textContent = defaultSettings.prepareSeconds;
             document.getElementById('cooldown-value').textContent = defaultSettings.cooldownSeconds;
         }
@@ -500,9 +500,9 @@
                 defaultSettings = savedSettings;
             }
             updateSettingsDisplay();
-            
+
             const savedTimers = JSON.parse(localStorage.getItem('timers')) || [];
-            
+
             if (savedTimers.length === 0) {
                 // Create default timer if none exist
                 const defaultTimer = {
@@ -511,8 +511,8 @@
                     sets: defaultSettings.sets,
                     workMinutes: defaultSettings.workMinutes,
                     workSeconds: defaultSettings.workSeconds,
-                    restMinutes: defaultSettings.restMinutes,
-                    restSeconds: defaultSettings.restSeconds,
+                    breakMinutes: defaultSettings.breakMinutes,
+                    breakSeconds: defaultSettings.breakSeconds,
                     element: document.createElement('div'),
                 };
                 createTimerElement(defaultTimer);
@@ -526,8 +526,8 @@
                         sets: savedTimer.sets ?? 1,
                         workMinutes: savedTimer.workMinutes ?? 0,
                         workSeconds: savedTimer.workSeconds ?? 30,
-                        restMinutes: savedTimer.restMinutes ?? 0,
-                        restSeconds: savedTimer.restSeconds ?? 15,
+                        breakMinutes: savedTimer.breakMinutes ?? 0,
+                        breakSeconds: savedTimer.breakSeconds ?? 15,
                         element: document.createElement('div'),
                     };
 
@@ -542,7 +542,7 @@
             updateSettingsDisplay();
             document.getElementById('settings-overlay').classList.add('visible');
         });
-        
+
         // Add click handlers for sets, prepare, and cooldown
         document.getElementById('sets-value').addEventListener('click', () => {
             const newValue = prompt('Enter number of sets:', defaultSettings.sets);
@@ -552,7 +552,7 @@
                 updateSettingsDisplay();
             }
         });
-        
+
         document.getElementById('prepare-value').addEventListener('click', () => {
             const newValue = prompt('Enter prepare seconds:', defaultSettings.prepareSeconds);
             const parsed = parseInt(newValue);
@@ -561,7 +561,7 @@
                 updateSettingsDisplay();
             }
         });
-        
+
         document.getElementById('cooldown-value').addEventListener('click', () => {
             const newValue = prompt('Enter cooldown seconds:', defaultSettings.cooldownSeconds);
             const parsed = parseInt(newValue);
@@ -570,11 +570,11 @@
                 updateSettingsDisplay();
             }
         });
-        
+
         document.getElementById('settings-cancel').addEventListener('click', () => {
             document.getElementById('settings-overlay').classList.remove('visible');
         });
-        
+
         // Settings increment/decrement handlers
         document.getElementById('sets-inc').addEventListener('click', () => {
             defaultSettings.sets++;
@@ -586,7 +586,7 @@
                 updateSettingsDisplay();
             }
         });
-        
+
         document.getElementById('work-inc').addEventListener('click', () => {
             defaultSettings.workSeconds++;
             if (defaultSettings.workSeconds >= 60) {
@@ -604,25 +604,25 @@
             }
             updateSettingsDisplay();
         });
-        
-        document.getElementById('rest-inc').addEventListener('click', () => {
-            defaultSettings.restSeconds++;
-            if (defaultSettings.restSeconds >= 60) {
-                defaultSettings.restSeconds = 0;
-                defaultSettings.restMinutes++;
+
+        document.getElementById('break-inc').addEventListener('click', () => {
+            defaultSettings.breakSeconds++;
+            if (defaultSettings.breakSeconds >= 60) {
+                defaultSettings.breakSeconds = 0;
+                defaultSettings.breakMinutes++;
             }
             updateSettingsDisplay();
         });
-        document.getElementById('rest-dec').addEventListener('click', () => {
-            if (defaultSettings.restSeconds > 0) {
-                defaultSettings.restSeconds--;
-            } else if (defaultSettings.restMinutes > 0) {
-                defaultSettings.restMinutes--;
-                defaultSettings.restSeconds = 59;
+        document.getElementById('break-dec').addEventListener('click', () => {
+            if (defaultSettings.breakSeconds > 0) {
+                defaultSettings.breakSeconds--;
+            } else if (defaultSettings.breakMinutes > 0) {
+                defaultSettings.breakMinutes--;
+                defaultSettings.breakSeconds = 59;
             }
             updateSettingsDisplay();
         });
-        
+
         document.getElementById('prepare-inc').addEventListener('click', () => {
             defaultSettings.prepareSeconds++;
             updateSettingsDisplay();
@@ -633,7 +633,7 @@
                 updateSettingsDisplay();
             }
         });
-        
+
         document.getElementById('cooldown-inc').addEventListener('click', () => {
             defaultSettings.cooldownSeconds++;
             updateSettingsDisplay();
@@ -644,7 +644,7 @@
                 updateSettingsDisplay();
             }
         });
-        
+
         document.getElementById('settings-save').addEventListener('click', () => {
             localStorage.setItem('defaultSettings', JSON.stringify(defaultSettings));
             document.getElementById('settings-overlay').classList.remove('visible');
@@ -657,8 +657,8 @@
                 sets: defaultSettings.sets,
                 workMinutes: defaultSettings.workMinutes,
                 workSeconds: defaultSettings.workSeconds,
-                restMinutes: defaultSettings.restMinutes,
-                restSeconds: defaultSettings.restSeconds,
+                breakMinutes: defaultSettings.breakMinutes,
+                breakSeconds: defaultSettings.breakSeconds,
                 element: document.createElement('div'),
             };
 
@@ -674,11 +674,11 @@
             // Header with name and edit button
             const header = document.createElement('div');
             header.className = 'timer-header';
-            
+
             const nameSpan = document.createElement('span');
             nameSpan.className = 'timer-name';
             nameSpan.textContent = timer.name;
-            
+
             const editButton = document.createElement('button');
             editButton.className = 'edit-button';
             editButton.textContent = '✎';
@@ -690,24 +690,24 @@
                     saveTimersToLocalStorage();
                 }
             });
-            
+
             const removeButton = document.createElement('button');
             removeButton.className = 'remove-button';
             removeButton.textContent = '✕';
             removeButton.style.marginLeft = 'auto';
             removeButton.addEventListener('click', () => handleRemoveTimer(timer));
-            
+
             header.appendChild(nameSpan);
             header.appendChild(editButton);
             header.appendChild(removeButton);
-            
+
             // Sets control
             const setsRow = document.createElement('div');
             setsRow.innerHTML = `<div class="control-label">SETS</div>`;
-            
+
             const setsControl = document.createElement('div');
             setsControl.className = 'control-row';
-            
+
             const setsDecButton = document.createElement('button');
             setsDecButton.className = 'control-button';
             setsDecButton.textContent = '−';
@@ -718,7 +718,7 @@
                     saveTimersToLocalStorage();
                 }
             });
-            
+
             const setsValue = document.createElement('div');
             setsValue.className = 'control-value';
             setsValue.textContent = timer.sets;
@@ -731,7 +731,7 @@
                     saveTimersToLocalStorage();
                 }
             });
-            
+
             const setsIncButton = document.createElement('button');
             setsIncButton.className = 'control-button';
             setsIncButton.textContent = '+';
@@ -740,18 +740,18 @@
                 setsValue.textContent = timer.sets;
                 saveTimersToLocalStorage();
             });
-            
+
             setsControl.appendChild(setsDecButton);
             setsControl.appendChild(setsValue);
             setsControl.appendChild(setsIncButton);
-            
+
             // Work control
             const workRow = document.createElement('div');
             workRow.innerHTML = `<div class="control-label">WORK</div>`;
-            
+
             const workControl = document.createElement('div');
             workControl.className = 'control-row';
-            
+
             const workDecButton = document.createElement('button');
             workDecButton.className = 'control-button';
             workDecButton.textContent = '−';
@@ -766,10 +766,10 @@
                 workSecSpan.textContent = String(timer.workSeconds).padStart(2, '0');
                 saveTimersToLocalStorage();
             });
-            
+
             const workValue = document.createElement('div');
             workValue.className = 'control-value';
-            
+
             const workMinSpan = document.createElement('span');
             workMinSpan.className = 'time-part';
             workMinSpan.textContent = String(timer.workMinutes).padStart(2, '0');
@@ -782,7 +782,7 @@
                     saveTimersToLocalStorage();
                 }
             });
-            
+
             const workSecSpan = document.createElement('span');
             workSecSpan.className = 'time-part';
             workSecSpan.textContent = String(timer.workSeconds).padStart(2, '0');
@@ -795,11 +795,11 @@
                     saveTimersToLocalStorage();
                 }
             });
-            
+
             workValue.appendChild(workMinSpan);
             workValue.appendChild(document.createTextNode(' : '));
             workValue.appendChild(workSecSpan);
-            
+
             const workIncButton = document.createElement('button');
             workIncButton.className = 'control-button';
             workIncButton.textContent = '+';
@@ -813,100 +813,100 @@
                 workSecSpan.textContent = String(timer.workSeconds).padStart(2, '0');
                 saveTimersToLocalStorage();
             });
-            
+
             workControl.appendChild(workDecButton);
             workControl.appendChild(workValue);
             workControl.appendChild(workIncButton);
-            
-            // Rest control
-            const restRow = document.createElement('div');
-            restRow.innerHTML = `<div class="control-label">REST</div>`;
-            
-            const restControl = document.createElement('div');
-            restControl.className = 'control-row';
-            
-            const restDecButton = document.createElement('button');
-            restDecButton.className = 'control-button';
-            restDecButton.textContent = '−';
-            restDecButton.addEventListener('click', () => {
-                if (timer.restSeconds > 0) {
-                    timer.restSeconds--;
-                } else if (timer.restMinutes > 0) {
-                    timer.restMinutes--;
-                    timer.restSeconds = 59;
+
+            // Break control
+            const breakRow = document.createElement('div');
+            breakRow.innerHTML = `<div class="control-label">BREAK</div>`;
+
+            const breakControl = document.createElement('div');
+            breakControl.className = 'control-row';
+
+            const breakDecButton = document.createElement('button');
+            breakDecButton.className = 'control-button';
+            breakDecButton.textContent = '−';
+            breakDecButton.addEventListener('click', () => {
+                if (timer.breakSeconds > 0) {
+                    timer.breakSeconds--;
+                } else if (timer.breakMinutes > 0) {
+                    timer.breakMinutes--;
+                    timer.breakSeconds = 59;
                 }
-                restMinSpan.textContent = String(timer.restMinutes).padStart(2, '0');
-                restSecSpan.textContent = String(timer.restSeconds).padStart(2, '0');
+                breakMinSpan.textContent = String(timer.breakMinutes).padStart(2, '0');
+                breakSecSpan.textContent = String(timer.breakSeconds).padStart(2, '0');
                 saveTimersToLocalStorage();
             });
-            
-            const restValue = document.createElement('div');
-            restValue.className = 'control-value';
-            
-            const restMinSpan = document.createElement('span');
-            restMinSpan.className = 'time-part';
-            restMinSpan.textContent = String(timer.restMinutes).padStart(2, '0');
-            restMinSpan.addEventListener('click', () => {
-                const newValue = prompt('Enter rest minutes:', timer.restMinutes);
+
+            const breakValue = document.createElement('div');
+            breakValue.className = 'control-value';
+
+            const breakMinSpan = document.createElement('span');
+            breakMinSpan.className = 'time-part';
+            breakMinSpan.textContent = String(timer.breakMinutes).padStart(2, '0');
+            breakMinSpan.addEventListener('click', () => {
+                const newValue = prompt('Enter break minutes:', timer.breakMinutes);
                 const parsed = parseInt(newValue);
                 if (newValue !== null && !isNaN(parsed) && parsed >= 0) {
-                    timer.restMinutes = parsed;
-                    restMinSpan.textContent = String(timer.restMinutes).padStart(2, '0');
+                    timer.breakMinutes = parsed;
+                    breakMinSpan.textContent = String(timer.breakMinutes).padStart(2, '0');
                     saveTimersToLocalStorage();
                 }
             });
-            
-            const restSecSpan = document.createElement('span');
-            restSecSpan.className = 'time-part';
-            restSecSpan.textContent = String(timer.restSeconds).padStart(2, '0');
-            restSecSpan.addEventListener('click', () => {
-                const newValue = prompt('Enter rest seconds:', timer.restSeconds);
+
+            const breakSecSpan = document.createElement('span');
+            breakSecSpan.className = 'time-part';
+            breakSecSpan.textContent = String(timer.breakSeconds).padStart(2, '0');
+            breakSecSpan.addEventListener('click', () => {
+                const newValue = prompt('Enter break seconds:', timer.breakSeconds);
                 const parsed = parseInt(newValue);
                 if (newValue !== null && !isNaN(parsed) && parsed >= 0 && parsed < 60) {
-                    timer.restSeconds = parsed;
-                    restSecSpan.textContent = String(timer.restSeconds).padStart(2, '0');
+                    timer.breakSeconds = parsed;
+                    breakSecSpan.textContent = String(timer.breakSeconds).padStart(2, '0');
                     saveTimersToLocalStorage();
                 }
             });
-            
-            restValue.appendChild(restMinSpan);
-            restValue.appendChild(document.createTextNode(' : '));
-            restValue.appendChild(restSecSpan);
-            
-            const restIncButton = document.createElement('button');
-            restIncButton.className = 'control-button';
-            restIncButton.textContent = '+';
-            restIncButton.addEventListener('click', () => {
-                timer.restSeconds++;
-                if (timer.restSeconds >= 60) {
-                    timer.restSeconds = 0;
-                    timer.restMinutes++;
+
+            breakValue.appendChild(breakMinSpan);
+            breakValue.appendChild(document.createTextNode(' : '));
+            breakValue.appendChild(breakSecSpan);
+
+            const breakIncButton = document.createElement('button');
+            breakIncButton.className = 'control-button';
+            breakIncButton.textContent = '+';
+            breakIncButton.addEventListener('click', () => {
+                timer.breakSeconds++;
+                if (timer.breakSeconds >= 60) {
+                    timer.breakSeconds = 0;
+                    timer.breakMinutes++;
                 }
-                restMinSpan.textContent = String(timer.restMinutes).padStart(2, '0');
-                restSecSpan.textContent = String(timer.restSeconds).padStart(2, '0');
+                breakMinSpan.textContent = String(timer.breakMinutes).padStart(2, '0');
+                breakSecSpan.textContent = String(timer.breakSeconds).padStart(2, '0');
                 saveTimersToLocalStorage();
             });
-            
-            restControl.appendChild(restDecButton);
-            restControl.appendChild(restValue);
-            restControl.appendChild(restIncButton);
-            
+
+            breakControl.appendChild(breakDecButton);
+            breakControl.appendChild(breakValue);
+            breakControl.appendChild(breakIncButton);
+
             // Start button
             const startButton = document.createElement('button');
             startButton.className = 'start-button';
             startButton.textContent = 'START';
             startButton.addEventListener('click', () => handleStartTimer(timer));
-            
+
             // Assemble
             timer.element.appendChild(header);
             timer.element.appendChild(setsRow);
             timer.element.appendChild(setsControl);
             timer.element.appendChild(workRow);
             timer.element.appendChild(workControl);
-            timer.element.appendChild(restRow);
-            timer.element.appendChild(restControl);
+            timer.element.appendChild(breakRow);
+            timer.element.appendChild(breakControl);
             timer.element.appendChild(startButton);
-            
+
             const container = document.getElementById('timers-container');
             container.insertBefore(timer.element, container.firstChild);
         }
@@ -914,75 +914,75 @@
         function handleStartTimer(timer) {
             // Create fullscreen overlay
             const fullscreen = document.createElement('div');
-            fullscreen.className = 'fullscreen-timer warmup';
-            
+            fullscreen.className = 'fullscreen-timer prepare';
+
             const setsDisplay = document.createElement('div');
             setsDisplay.className = 'timer-sets';
-            
+
             const timeDisplay = document.createElement('div');
             timeDisplay.className = 'timer-display';
-            
+
             const phaseDisplay = document.createElement('div');
             phaseDisplay.className = 'timer-phase';
-            
+
             const pauseButton = document.createElement('button');
             pauseButton.className = 'pause-button';
             pauseButton.textContent = '⏸';
-            
+
             const cancelButton = document.createElement('button');
             cancelButton.className = 'cancel-button';
             cancelButton.textContent = '✕';
-            
+
             fullscreen.appendChild(setsDisplay);
             fullscreen.appendChild(timeDisplay);
             fullscreen.appendChild(phaseDisplay);
             fullscreen.appendChild(pauseButton);
             fullscreen.appendChild(cancelButton);
-            
+
             document.body.appendChild(fullscreen);
-            
+
             // Timer state
             let currentSet = 0;
-            let phase = 'warmup'; // warmup, work, rest, cooldown
+            let phase = 'prepare'; // prepare, work, break, cooldown
             let remainingSeconds = defaultSettings.prepareSeconds;
             let isPaused = false;
             let intervalId = null;
-            
+
             // Update display
             function updateDisplay() {
                 setsDisplay.textContent = `${currentSet} / ${timer.sets}`;
                 const minutes = Math.floor(remainingSeconds / 60);
                 const seconds = remainingSeconds % 60;
                 timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                phaseDisplay.textContent = phase === 'warmup' ? 'prepare' : phase;
-                
+                phaseDisplay.textContent = phase === 'prepare' ? 'prepare' : phase;
+
                 // Update background color
                 fullscreen.className = 'fullscreen-timer ' + phase;
             }
-            
+
             // Timer tick
             function tick() {
                 if (isPaused) return;
-                
+
                 remainingSeconds--;
                 updateDisplay();
-                
+
                 if (remainingSeconds <= 0) {
                     // Move to next phase
-                    if (phase === 'warmup') {
+                    if (phase === 'prepare') {
                         currentSet = 1;
                         phase = 'work';
                         remainingSeconds = timer.workMinutes * 60 + timer.workSeconds;
                     } else if (phase === 'work') {
                         if (currentSet < timer.sets) {
-                            phase = 'rest';
-                            remainingSeconds = timer.restMinutes * 60 + timer.restSeconds;
+                            phase = 'break';
+                            remainingSeconds = timer.breakMinutes * 60 + timer.breakSeconds;
                         } else {
                             // Last work cycle done, go to cooldown
                             phase = 'cooldown';
                             remainingSeconds = defaultSettings.cooldownSeconds;
                         }
-                    } else if (phase === 'rest') {
+                    } else if (phase === 'break') {
                         currentSet++;
                         phase = 'work';
                         remainingSeconds = timer.workMinutes * 60 + timer.workSeconds;
@@ -999,7 +999,7 @@
                     updateDisplay();
                 }
             }
-            
+
             // Pause/Resume functionality
             pauseButton.addEventListener('click', () => {
                 isPaused = !isPaused;
@@ -1010,7 +1010,7 @@
                     cancelButton.classList.remove('visible');
                 }
             });
-            
+
             // Cancel functionality
             cancelButton.addEventListener('click', () => {
                 if (confirm('Are you sure you want to cancel the timer?')) {
@@ -1019,7 +1019,7 @@
                     document.removeEventListener('keydown', handleKeypress);
                 }
             });
-            
+
             // Exit on Escape key
             function handleKeypress(e) {
                 if (e.key === 'Escape') {
@@ -1029,27 +1029,27 @@
                 }
             }
             document.addEventListener('keydown', handleKeypress);
-            
+
             // Start timer
             updateDisplay();
             intervalId = setInterval(tick, 1000);
         }
-        
+
         function playAlert() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                
+
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-                
+
                 oscillator.frequency.value = 800;
                 oscillator.type = 'sine';
-                
+
                 gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                
+
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.5);
             } catch (e) {
@@ -1076,8 +1076,8 @@
                 sets: timer.sets,
                 workMinutes: timer.workMinutes,
                 workSeconds: timer.workSeconds,
-                restMinutes: timer.restMinutes,
-                restSeconds: timer.restSeconds
+                breakMinutes: timer.breakMinutes,
+                breakSeconds: timer.breakSeconds
             }));
             localStorage.setItem('timers', JSON.stringify(dataToSave));
         }
