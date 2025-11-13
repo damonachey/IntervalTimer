@@ -10,6 +10,12 @@
             margin: 20px;
             background-color: #f5f5f5;
         }
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
         #add-timer {
             padding: 10px 20px;
             font-size: 16px;
@@ -18,7 +24,17 @@
             background-color: #4a90e2;
             color: white;
             border: none;
-            margin: 5px 0;
+        }
+        #settings-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 28px;
+            padding: 5px;
+            color: #666;
+        }
+        #settings-button:hover {
+            color: #4a90e2;
         }
         button {
             display: block;
@@ -232,19 +248,187 @@
         .cancel-button:hover {
             background-color: rgba(220, 53, 69, 0.5);
         }
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .settings-overlay.visible {
+            display: flex;
+        }
+        .settings-panel {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .settings-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .settings-row {
+            margin: 20px 0;
+        }
+        .settings-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .settings-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .settings-button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 18px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-value {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+        .settings-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+        .settings-save, .settings-cancel {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+        }
+        .settings-save {
+            background-color: #4a90e2;
+            color: white;
+        }
+        .settings-cancel {
+            background-color: #e8e8e8;
+            color: #333;
+        }
     </style>
 </head>
 <body>
     <h1>Interval Timer</h1>
-    <button id="add-timer">+ Add Timer</button>
+    <div class="header-container">
+        <button id="add-timer">+ Add Timer</button>
+        <button id="settings-button">⚙</button>
+    </div>
     <div id="timers-container"></div>
+    
+    <div id="settings-overlay" class="settings-overlay">
+        <div class="settings-panel">
+            <div class="settings-title">Default Settings</div>
+            
+            <div class="settings-row">
+                <div class="settings-label">SETS</div>
+                <div class="settings-control">
+                    <button class="settings-button" id="sets-dec">−</button>
+                    <div class="settings-value" id="sets-value">1</div>
+                    <button class="settings-button" id="sets-inc">+</button>
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">WORK</div>
+                <div class="settings-control">
+                    <button class="settings-button" id="work-dec">−</button>
+                    <div class="settings-value" id="work-value">00 : 30</div>
+                    <button class="settings-button" id="work-inc">+</button>
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">REST</div>
+                <div class="settings-control">
+                    <button class="settings-button" id="rest-dec">−</button>
+                    <div class="settings-value" id="rest-value">00 : 15</div>
+                    <button class="settings-button" id="rest-inc">+</button>
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">PREPARE</div>
+                <div class="settings-control">
+                    <button class="settings-button" id="prepare-dec">−</button>
+                    <div class="settings-value" id="prepare-value">5</div>
+                    <button class="settings-button" id="prepare-inc">+</button>
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">COOLDOWN</div>
+                <div class="settings-control">
+                    <button class="settings-button" id="cooldown-dec">−</button>
+                    <div class="settings-value" id="cooldown-value">5</div>
+                    <button class="settings-button" id="cooldown-inc">+</button>
+                </div>
+            </div>
+            
+            <div class="settings-buttons">
+                <button class="settings-cancel" id="settings-cancel">Cancel</button>
+                <button class="settings-save" id="settings-save">Save</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         let timers = [];
         let activeTimer = null;
+        let defaultSettings = {
+            sets: 1,
+            workMinutes: 0,
+            workSeconds: 30,
+            restMinutes: 0,
+            restSeconds: 15,
+            prepareSeconds: 5,
+            cooldownSeconds: 5
+        };
 
-        // Load timers from local storage on page load
+        // Update settings display
+        function updateSettingsDisplay() {
+            document.getElementById('sets-value').textContent = defaultSettings.sets;
+            document.getElementById('work-value').textContent = `${String(defaultSettings.workMinutes).padStart(2, '0')} : ${String(defaultSettings.workSeconds).padStart(2, '0')}`;
+            document.getElementById('rest-value').textContent = `${String(defaultSettings.restMinutes).padStart(2, '0')} : ${String(defaultSettings.restSeconds).padStart(2, '0')}`;
+            document.getElementById('prepare-value').textContent = defaultSettings.prepareSeconds;
+            document.getElementById('cooldown-value').textContent = defaultSettings.cooldownSeconds;
+        }
+
+        // Load settings and timers from local storage on page load
         window.onload = () => {
+            // Load default settings
+            const savedSettings = JSON.parse(localStorage.getItem('defaultSettings'));
+            if (savedSettings) {
+                defaultSettings = savedSettings;
+            }
+            updateSettingsDisplay();
+            
             const savedTimers = JSON.parse(localStorage.getItem('timers')) || [];
             
             if (savedTimers.length === 0) {
@@ -252,11 +436,11 @@
                 const defaultTimer = {
                     id: Date.now(),
                     name: "Timer",
-                    sets: 1,
-                    workMinutes: 0,
-                    workSeconds: 30,
-                    restMinutes: 0,
-                    restSeconds: 15,
+                    sets: defaultSettings.sets,
+                    workMinutes: defaultSettings.workMinutes,
+                    workSeconds: defaultSettings.workSeconds,
+                    restMinutes: defaultSettings.restMinutes,
+                    restSeconds: defaultSettings.restSeconds,
                     element: document.createElement('div'),
                 };
                 createTimerElement(defaultTimer);
@@ -281,15 +465,100 @@
             }
         };
 
+        // Settings button handler
+        document.getElementById('settings-button').addEventListener('click', () => {
+            updateSettingsDisplay();
+            document.getElementById('settings-overlay').classList.add('visible');
+        });
+        
+        document.getElementById('settings-cancel').addEventListener('click', () => {
+            document.getElementById('settings-overlay').classList.remove('visible');
+        });
+        
+        // Settings increment/decrement handlers
+        document.getElementById('sets-inc').addEventListener('click', () => {
+            defaultSettings.sets++;
+            updateSettingsDisplay();
+        });
+        document.getElementById('sets-dec').addEventListener('click', () => {
+            if (defaultSettings.sets > 1) {
+                defaultSettings.sets--;
+                updateSettingsDisplay();
+            }
+        });
+        
+        document.getElementById('work-inc').addEventListener('click', () => {
+            defaultSettings.workSeconds++;
+            if (defaultSettings.workSeconds >= 60) {
+                defaultSettings.workSeconds = 0;
+                defaultSettings.workMinutes++;
+            }
+            updateSettingsDisplay();
+        });
+        document.getElementById('work-dec').addEventListener('click', () => {
+            if (defaultSettings.workSeconds > 0) {
+                defaultSettings.workSeconds--;
+            } else if (defaultSettings.workMinutes > 0) {
+                defaultSettings.workMinutes--;
+                defaultSettings.workSeconds = 59;
+            }
+            updateSettingsDisplay();
+        });
+        
+        document.getElementById('rest-inc').addEventListener('click', () => {
+            defaultSettings.restSeconds++;
+            if (defaultSettings.restSeconds >= 60) {
+                defaultSettings.restSeconds = 0;
+                defaultSettings.restMinutes++;
+            }
+            updateSettingsDisplay();
+        });
+        document.getElementById('rest-dec').addEventListener('click', () => {
+            if (defaultSettings.restSeconds > 0) {
+                defaultSettings.restSeconds--;
+            } else if (defaultSettings.restMinutes > 0) {
+                defaultSettings.restMinutes--;
+                defaultSettings.restSeconds = 59;
+            }
+            updateSettingsDisplay();
+        });
+        
+        document.getElementById('prepare-inc').addEventListener('click', () => {
+            defaultSettings.prepareSeconds++;
+            updateSettingsDisplay();
+        });
+        document.getElementById('prepare-dec').addEventListener('click', () => {
+            if (defaultSettings.prepareSeconds > 1) {
+                defaultSettings.prepareSeconds--;
+                updateSettingsDisplay();
+            }
+        });
+        
+        document.getElementById('cooldown-inc').addEventListener('click', () => {
+            defaultSettings.cooldownSeconds++;
+            updateSettingsDisplay();
+        });
+        document.getElementById('cooldown-dec').addEventListener('click', () => {
+            if (defaultSettings.cooldownSeconds > 1) {
+                defaultSettings.cooldownSeconds--;
+                updateSettingsDisplay();
+            }
+        });
+        
+        document.getElementById('settings-save').addEventListener('click', () => {
+            localStorage.setItem('defaultSettings', JSON.stringify(defaultSettings));
+            document.getElementById('settings-overlay').classList.remove('visible');
+        });
+
         document.getElementById('add-timer').addEventListener('click', () => {
             const timer = {
                 id: Date.now(),
                 name: "Timer",
-                sets: 1,
-                workMinutes: 0,
-                workSeconds: 30,
-                restMinutes: 0,
-                restSeconds: 15,
+                sets: defaultSettings.sets,
+                workMinutes: defaultSettings.workMinutes,
+                workSeconds: defaultSettings.workSeconds,
+                restMinutes: defaultSettings.restMinutes,
+                restSeconds: defaultSettings.restSeconds,
                 element: document.createElement('div'),
             };
 
@@ -575,7 +844,7 @@
             // Timer state
             let currentSet = 0;
             let phase = 'warmup'; // warmup, work, rest, cooldown
-            let remainingSeconds = 5; // warmup is 5 seconds
+            let remainingSeconds = defaultSettings.prepareSeconds;
             let isPaused = false;
             let intervalId = null;
             
@@ -611,7 +880,7 @@
                         } else {
                             // Last work cycle done, go to cooldown
                             phase = 'cooldown';
-                            remainingSeconds = 5;
+                            remainingSeconds = defaultSettings.cooldownSeconds;
                         }
                     } else if (phase === 'rest') {
                         currentSet++;
