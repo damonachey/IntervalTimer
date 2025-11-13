@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interval Timer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        #add-timer {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            margin: 5px 0;
+        }
+        button {
+            display: block;
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: left;
+            border-radius: 5px;
+        }
+        .timer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .timer-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            flex-grow: 1;
+            text-align: left;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
+        .timer-button.running {
+            background-color: #28a745;
+        }
+        .timer-button.finished {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .remove-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+            color: #666;
+        }
+        .remove-button:hover {
+            color: #dc3545;
+        }
+        .timer-config {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .timer-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .timer-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .edit-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+            color: #666;
+        }
+        .edit-button:hover {
+            color: #4a90e2;
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .control-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            text-align: center;
+            width: 100%;
+        }
+        .control-button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .control-value {
+            font-size: 32px;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+        }
+        .start-button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .fullscreen-timer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: background-color 0.5s;
+        }
+        .fullscreen-timer.warmup {
+            background-color: #ffc107;
+        }
+        .fullscreen-timer.work {
+            background-color: #28a745;
+        }
+        .fullscreen-timer.rest {
+            background-color: #2196f3;
+        }
+        .fullscreen-timer.cooldown {
+            background-color: #ffc107;
+        }
+        .timer-sets {
+            font-size: 72px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 20px;
+        }
+        .timer-display {
+            font-size: 120px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 20px;
+        }
+        .timer-phase {
+            font-size: 36px;
+            font-weight: normal;
+            color: rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+        }
+        .pause-button {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .pause-button:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>Interval Timer</h1>
+    <button id="add-timer">+ Add Timer</button>
+    <div id="timers-container"></div>
+
+    <script>
+        let timers = [];
+        let activeTimer = null;
+
+        // Load timers from local storage on page load
+        window.onload = () => {
+            const savedTimers = JSON.parse(localStorage.getItem('timers')) || [];
+            savedTimers.forEach(savedTimer => {
+                const timer = {
+                    id: savedTimer.id,
+                    name: savedTimer.name,
+                    sets: savedTimer.sets || 1,
+                    workMinutes: savedTimer.workMinutes || 0,
+                    workSeconds: savedTimer.workSeconds || 30,
+                    restMinutes: savedTimer.restMinutes || 0,
+                    restSeconds: savedTimer.restSeconds || 15,
+                    element: document.createElement('div'),
+                };
+
+                createTimerElement(timer);
+                timers.push(timer);
+            });
+        };
+
+        document.getElementById('add-timer').addEventListener('click', () => {
+            const timer = {
+                id: Date.now(),
+                name: "Timer",
+                sets: 1,
+                workMinutes: 0,
+                workSeconds: 30,
+                restMinutes: 0,
+                restSeconds: 15,
+                element: document.createElement('div'),
+            };
+
+            createTimerElement(timer);
+            timers.push(timer);
+            saveTimersToLocalStorage();
+        });
+
+
+        function createTimerElement(timer) {
+            timer.element.className = 'timer-config';
+
+            // Header with name and edit button
+            const header = document.createElement('div');
+            header.className = 'timer-header';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'timer-name';
+            nameSpan.textContent = timer.name;
+            
+            const editButton = document.createElement('button');
+            editButton.className = 'edit-button';
+            editButton.textContent = '✎';
+            editButton.addEventListener('click', () => {
+                const newName = prompt('Enter timer name:', timer.name);
+                if (newName) {
+                    timer.name = newName;
+                    nameSpan.textContent = newName;
+                    saveTimersToLocalStorage();
+                }
+            });
+            
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-button';
+            removeButton.textContent = '✕';
+            removeButton.style.marginLeft = 'auto';
+            removeButton.addEventListener('click', () => handleRemoveTimer(timer));
+            
+            header.appendChild(nameSpan);
+            header.appendChild(editButton);
+            header.appendChild(removeButton);
+            
+            // Sets control
+            const setsRow = document.createElement('div');
+            setsRow.innerHTML = `<div class="control-label">SETS</div>`;
+            
+            const setsControl = document.createElement('div');
+            setsControl.className = 'control-row';
+            
+            const setsDecButton = document.createElement('button');
+            setsDecButton.className = 'control-button';
+            setsDecButton.textContent = '−';
+            setsDecButton.addEventListener('click', () => {
+                if (timer.sets > 1) {
+                    timer.sets--;
+                    setsValue.textContent = timer.sets;
+                    saveTimersToLocalStorage();
+                }
+            });
+            
+            const setsValue = document.createElement('div');
+            setsValue.className = 'control-value';
+            setsValue.textContent = timer.sets;
+            
+            const setsIncButton = document.createElement('button');
+            setsIncButton.className = 'control-button';
+            setsIncButton.textContent = '+';
+            setsIncButton.addEventListener('click', () => {
+                timer.sets++;
+                setsValue.textContent = timer.sets;
+                saveTimersToLocalStorage();
+            });
+            
+            setsControl.appendChild(setsDecButton);
+            setsControl.appendChild(setsValue);
+            setsControl.appendChild(setsIncButton);
+            
+            // Work control
+            const workRow = document.createElement('div');
+            workRow.innerHTML = `<div class="control-label">WORK</div>`;
+            
+            const workControl = document.createElement('div');
+            workControl.className = 'control-row';
+            
+            const workDecButton = document.createElement('button');
+            workDecButton.className = 'control-button';
+            workDecButton.textContent = '−';
+            workDecButton.addEventListener('click', () => {
+                if (timer.workSeconds > 0) {
+                    timer.workSeconds--;
+                } else if (timer.workMinutes > 0) {
+                    timer.workMinutes--;
+                    timer.workSeconds = 59;
+                }
+                workValue.textContent = `${String(timer.workMinutes).padStart(2, '0')} : ${String(timer.workSeconds).padStart(2, '0')}`;
+                saveTimersToLocalStorage();
+            });
+            
+            const workValue = document.createElement('div');
+            workValue.className = 'control-value';
+            workValue.textContent = `${String(timer.workMinutes).padStart(2, '0')} : ${String(timer.workSeconds).padStart(2, '0')}`;
+            
+            const workIncButton = document.createElement('button');
+            workIncButton.className = 'control-button';
+            workIncButton.textContent = '+';
+            workIncButton.addEventListener('click', () => {
+                timer.workSeconds++;
+                if (timer.workSeconds >= 60) {
+                    timer.workSeconds = 0;
+                    timer.workMinutes++;
+                }
+                workValue.textContent = `${String(timer.workMinutes).padStart(2, '0')} : ${String(timer.workSeconds).padStart(2, '0')}`;
+                saveTimersToLocalStorage();
+            });
+            
+            workControl.appendChild(workDecButton);
+            workControl.appendChild(workValue);
+            workControl.appendChild(workIncButton);
+            
+            // Rest control
+            const restRow = document.createElement('div');
+            restRow.innerHTML = `<div class="control-label">REST</div>`;
+            
+            const restControl = document.createElement('div');
+            restControl.className = 'control-row';
+            
+            const restDecButton = document.createElement('button');
+            restDecButton.className = 'control-button';
+            restDecButton.textContent = '−';
+            restDecButton.addEventListener('click', () => {
+                if (timer.restSeconds > 0) {
+                    timer.restSeconds--;
+                } else if (timer.restMinutes > 0) {
+                    timer.restMinutes--;
+                    timer.restSeconds = 59;
+                }
+                restValue.textContent = `${String(timer.restMinutes).padStart(2, '0')} : ${String(timer.restSeconds).padStart(2, '0')}`;
+                saveTimersToLocalStorage();
+            });
+            
+            const restValue = document.createElement('div');
+            restValue.className = 'control-value';
+            restValue.textContent = `${String(timer.restMinutes).padStart(2, '0')} : ${String(timer.restSeconds).padStart(2, '0')}`;
+            
+            const restIncButton = document.createElement('button');
+            restIncButton.className = 'control-button';
+            restIncButton.textContent = '+';
+            restIncButton.addEventListener('click', () => {
+                timer.restSeconds++;
+                if (timer.restSeconds >= 60) {
+                    timer.restSeconds = 0;
+                    timer.restMinutes++;
+                }
+                restValue.textContent = `${String(timer.restMinutes).padStart(2, '0')} : ${String(timer.restSeconds).padStart(2, '0')}`;
+                saveTimersToLocalStorage();
+            });
+            
+            restControl.appendChild(restDecButton);
+            restControl.appendChild(restValue);
+            restControl.appendChild(restIncButton);
+            
+            // Start button
+            const startButton = document.createElement('button');
+            startButton.className = 'start-button';
+            startButton.textContent = 'START';
+            startButton.addEventListener('click', () => handleStartTimer(timer));
+            
+            // Assemble
+            timer.element.appendChild(header);
+            timer.element.appendChild(setsRow);
+            timer.element.appendChild(setsControl);
+            timer.element.appendChild(workRow);
+            timer.element.appendChild(workControl);
+            timer.element.appendChild(restRow);
+            timer.element.appendChild(restControl);
+            timer.element.appendChild(startButton);
+            
+            const container = document.getElementById('timers-container');
+            container.insertBefore(timer.element, container.firstChild);
+        }
+
+        function handleStartTimer(timer) {
+            // Create fullscreen overlay
+            const fullscreen = document.createElement('div');
+            fullscreen.className = 'fullscreen-timer warmup';
+            
+            const setsDisplay = document.createElement('div');
+            setsDisplay.className = 'timer-sets';
+            
+            const timeDisplay = document.createElement('div');
+            timeDisplay.className = 'timer-display';
+            
+            const phaseDisplay = document.createElement('div');
+            phaseDisplay.className = 'timer-phase';
+            
+            const pauseButton = document.createElement('button');
+            pauseButton.className = 'pause-button';
+            pauseButton.textContent = '⏸';
+            
+            fullscreen.appendChild(setsDisplay);
+            fullscreen.appendChild(timeDisplay);
+            fullscreen.appendChild(phaseDisplay);
+            fullscreen.appendChild(pauseButton);
+            
+            document.body.appendChild(fullscreen);
+            
+            // Timer state
+            let currentSet = 1;
+            let phase = 'warmup'; // warmup, work, rest, cooldown
+            let remainingSeconds = 5; // warmup is 5 seconds
+            let isPaused = false;
+            let intervalId = null;
+            
+            // Update display
+            function updateDisplay() {
+                setsDisplay.textContent = currentSet;
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                phaseDisplay.textContent = phase === 'warmup' ? 'prepare' : phase;
+                
+                // Update background color
+                fullscreen.className = 'fullscreen-timer ' + phase;
+            }
+            
+            // Timer tick
+            function tick() {
+                if (isPaused) return;
+                
+                remainingSeconds--;
+                updateDisplay();
+                
+                if (remainingSeconds <= 0) {
+                    // Move to next phase
+                    if (phase === 'warmup') {
+                        phase = 'work';
+                        remainingSeconds = timer.workMinutes * 60 + timer.workSeconds;
+                    } else if (phase === 'work') {
+                        currentSet++;
+                        if (currentSet <= timer.sets) {
+                            phase = 'rest';
+                            remainingSeconds = timer.restMinutes * 60 + timer.restSeconds;
+                        } else {
+                            // Last work cycle done, go to cooldown
+                            phase = 'cooldown';
+                            remainingSeconds = 5;
+                        }
+                    } else if (phase === 'rest') {
+                        phase = 'work';
+                        remainingSeconds = timer.workMinutes * 60 + timer.workSeconds;
+                    } else if (phase === 'cooldown') {
+                        // Timer complete
+                        clearInterval(intervalId);
+                        playAlert();
+                        setTimeout(() => {
+                            fullscreen.remove();
+                        }, 2000);
+                        return;
+                    }
+                    playAlert();
+                    updateDisplay();
+                }
+            }
+            
+            // Pause/Resume functionality
+            pauseButton.addEventListener('click', () => {
+                isPaused = !isPaused;
+                pauseButton.textContent = isPaused ? '▶' : '⏸';
+            });
+            
+            // Exit on Escape key
+            function handleKeypress(e) {
+                if (e.key === 'Escape') {
+                    clearInterval(intervalId);
+                    fullscreen.remove();
+                    document.removeEventListener('keydown', handleKeypress);
+                }
+            }
+            document.addEventListener('keydown', handleKeypress);
+            
+            // Start timer
+            updateDisplay();
+            intervalId = setInterval(tick, 1000);
+        }
+        
+        function playAlert() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                // Ignore audio errors
+            }
+        }
+
+        function handleRemoveTimer(timer) {
+            if (confirm(`Are you sure you want to remove the timer: ${timer.name}?`)) {
+                if (timer === activeTimer) {
+                    activeTimer = null;
+                }
+                timer.element.remove();
+                timers = timers.filter(t => t !== timer);
+                saveTimersToLocalStorage();
+            }
+        }
+
+
+        function saveTimersToLocalStorage() {
+            const dataToSave = timers.map(timer => ({
+                id: timer.id,
+                name: timer.name,
+                sets: timer.sets,
+                workMinutes: timer.workMinutes,
+                workSeconds: timer.workSeconds,
+                restMinutes: timer.restMinutes,
+                restSeconds: timer.restSeconds
+            }));
+            localStorage.setItem('timers', JSON.stringify(dataToSave));
+        }
+    </script>
+</body>
+</html>
