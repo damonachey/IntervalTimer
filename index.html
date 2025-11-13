@@ -235,21 +235,39 @@
         // Load timers from local storage on page load
         window.onload = () => {
             const savedTimers = JSON.parse(localStorage.getItem('timers')) || [];
-            savedTimers.forEach(savedTimer => {
-                const timer = {
-                    id: savedTimer.id,
-                    name: savedTimer.name,
-                    sets: savedTimer.sets || 1,
-                    workMinutes: savedTimer.workMinutes || 0,
-                    workSeconds: savedTimer.workSeconds || 30,
-                    restMinutes: savedTimer.restMinutes || 0,
-                    restSeconds: savedTimer.restSeconds || 15,
+            
+            if (savedTimers.length === 0) {
+                // Create default timer if none exist
+                const defaultTimer = {
+                    id: Date.now(),
+                    name: "Timer",
+                    sets: 1,
+                    workMinutes: 0,
+                    workSeconds: 30,
+                    restMinutes: 0,
+                    restSeconds: 15,
                     element: document.createElement('div'),
                 };
+                createTimerElement(defaultTimer);
+                timers.push(defaultTimer);
+                saveTimersToLocalStorage();
+            } else {
+                savedTimers.forEach(savedTimer => {
+                    const timer = {
+                        id: savedTimer.id,
+                        name: savedTimer.name,
+                        sets: savedTimer.sets || 1,
+                        workMinutes: savedTimer.workMinutes || 0,
+                        workSeconds: savedTimer.workSeconds || 30,
+                        restMinutes: savedTimer.restMinutes || 0,
+                        restSeconds: savedTimer.restSeconds || 15,
+                        element: document.createElement('div'),
+                    };
 
-                createTimerElement(timer);
-                timers.push(timer);
-            });
+                    createTimerElement(timer);
+                    timers.push(timer);
+                });
+            }
         };
 
         document.getElementById('add-timer').addEventListener('click', () => {
