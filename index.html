@@ -523,11 +523,11 @@
                     const timer = {
                         id: savedTimer.id,
                         name: savedTimer.name,
-                        sets: savedTimer.sets || 1,
-                        workMinutes: savedTimer.workMinutes || 0,
-                        workSeconds: savedTimer.workSeconds || 30,
-                        restMinutes: savedTimer.restMinutes || 0,
-                        restSeconds: savedTimer.restSeconds || 15,
+                        sets: savedTimer.sets ?? 1,
+                        workMinutes: savedTimer.workMinutes ?? 0,
+                        workSeconds: savedTimer.workSeconds ?? 30,
+                        restMinutes: savedTimer.restMinutes ?? 0,
+                        restSeconds: savedTimer.restSeconds ?? 15,
                         element: document.createElement('div'),
                     };
 
