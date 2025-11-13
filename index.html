@@ -310,6 +310,17 @@
             font-weight: bold;
             min-width: 80px;
             text-align: center;
+            cursor: pointer;
+        }
+        .settings-value:hover {
+            color: #4a90e2;
+        }
+        .settings-time-part {
+            display: inline-block;
+            cursor: pointer;
+        }
+        .settings-time-part:hover {
+            color: #4a90e2;
         }
         .settings-buttons {
             display: flex;
@@ -359,7 +370,7 @@
                 <div class="settings-label">WORK</div>
                 <div class="settings-control">
                     <button class="settings-button" id="work-dec">−</button>
-                    <div class="settings-value" id="work-value">00 : 30</div>
+                    <div class="settings-value" id="work-value"></div>
                     <button class="settings-button" id="work-inc">+</button>
                 </div>
             </div>
@@ -368,7 +379,7 @@
                 <div class="settings-label">REST</div>
                 <div class="settings-control">
                     <button class="settings-button" id="rest-dec">−</button>
-                    <div class="settings-value" id="rest-value">00 : 15</div>
+                    <div class="settings-value" id="rest-value"></div>
                     <button class="settings-button" id="rest-inc">+</button>
                 </div>
             </div>
@@ -414,8 +425,69 @@
         // Update settings display
         function updateSettingsDisplay() {
             document.getElementById('sets-value').textContent = defaultSettings.sets;
-            document.getElementById('work-value').textContent = `${String(defaultSettings.workMinutes).padStart(2, '0')} : ${String(defaultSettings.workSeconds).padStart(2, '0')}`;
-            document.getElementById('rest-value').textContent = `${String(defaultSettings.restMinutes).padStart(2, '0')} : ${String(defaultSettings.restSeconds).padStart(2, '0')}`;
+            
+            // Update work time with clickable parts
+            const workValue = document.getElementById('work-value');
+            workValue.innerHTML = '';
+            const workMinSpan = document.createElement('span');
+            workMinSpan.className = 'settings-time-part';
+            workMinSpan.textContent = String(defaultSettings.workMinutes).padStart(2, '0');
+            workMinSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newValue = prompt('Enter work minutes:', defaultSettings.workMinutes);
+                const parsed = parseInt(newValue);
+                if (newValue !== null && !isNaN(parsed) && parsed >= 0) {
+                    defaultSettings.workMinutes = parsed;
+                    updateSettingsDisplay();
+                }
+            });
+            const workSecSpan = document.createElement('span');
+            workSecSpan.className = 'settings-time-part';
+            workSecSpan.textContent = String(defaultSettings.workSeconds).padStart(2, '0');
+            workSecSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newValue = prompt('Enter work seconds:', defaultSettings.workSeconds);
+                const parsed = parseInt(newValue);
+                if (newValue !== null && !isNaN(parsed) && parsed >= 0 && parsed < 60) {
+                    defaultSettings.workSeconds = parsed;
+                    updateSettingsDisplay();
+                }
+            });
+            workValue.appendChild(workMinSpan);
+            workValue.appendChild(document.createTextNode(' : '));
+            workValue.appendChild(workSecSpan);
+            
+            // Update rest time with clickable parts
+            const restValue = document.getElementById('rest-value');
+            restValue.innerHTML = '';
+            const restMinSpan = document.createElement('span');
+            restMinSpan.className = 'settings-time-part';
+            restMinSpan.textContent = String(defaultSettings.restMinutes).padStart(2, '0');
+            restMinSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newValue = prompt('Enter rest minutes:', defaultSettings.restMinutes);
+                const parsed = parseInt(newValue);
+                if (newValue !== null && !isNaN(parsed) && parsed >= 0) {
+                    defaultSettings.restMinutes = parsed;
+                    updateSettingsDisplay();
+                }
+            });
+            const restSecSpan = document.createElement('span');
+            restSecSpan.className = 'settings-time-part';
+            restSecSpan.textContent = String(defaultSettings.restSeconds).padStart(2, '0');
+            restSecSpan.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newValue = prompt('Enter rest seconds:', defaultSettings.restSeconds);
+                const parsed = parseInt(newValue);
+                if (newValue !== null && !isNaN(parsed) && parsed >= 0 && parsed < 60) {
+                    defaultSettings.restSeconds = parsed;
+                    updateSettingsDisplay();
+                }
+            });
+            restValue.appendChild(restMinSpan);
+            restValue.appendChild(document.createTextNode(' : '));
+            restValue.appendChild(restSecSpan);
+            
             document.getElementById('prepare-value').textContent = defaultSettings.prepareSeconds;
             document.getElementById('cooldown-value').textContent = defaultSettings.cooldownSeconds;
         }
@@ -469,6 +541,34 @@
         document.getElementById('settings-button').addEventListener('click', () => {
             updateSettingsDisplay();
             document.getElementById('settings-overlay').classList.add('visible');
+        });
+        
+        // Add click handlers for sets, prepare, and cooldown
+        document.getElementById('sets-value').addEventListener('click', () => {
+            const newValue = prompt('Enter number of sets:', defaultSettings.sets);
+            const parsed = parseInt(newValue);
+            if (newValue && !isNaN(parsed) && parsed > 0) {
+                defaultSettings.sets = parsed;
+                updateSettingsDisplay();
+            }
+        });
+        
+        document.getElementById('prepare-value').addEventListener('click', () => {
+            const newValue = prompt('Enter prepare seconds:', defaultSettings.prepareSeconds);
+            const parsed = parseInt(newValue);
+            if (newValue !== null && !isNaN(parsed) && parsed > 0) {
+                defaultSettings.prepareSeconds = parsed;
+                updateSettingsDisplay();
+            }
+        });
+        
+        document.getElementById('cooldown-value').addEventListener('click', () => {
+            const newValue = prompt('Enter cooldown seconds:', defaultSettings.cooldownSeconds);
+            const parsed = parseInt(newValue);
+            if (newValue !== null && !isNaN(parsed) && parsed > 0) {
+                defaultSettings.cooldownSeconds = parsed;
+                updateSettingsDisplay();
+            }
         });
         
         document.getElementById('settings-cancel').addEventListener('click', () => {
