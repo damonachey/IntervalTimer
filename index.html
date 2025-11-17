@@ -163,30 +163,38 @@
             margin-top: 15px;
             text-align: center;
         }
-        .fullscreen-timer {
+        .fullscreen-background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
+            z-index: 9998;
+            transition: background-color 0.5s;
+        }
+        .fullscreen-background.prepare {
+            background-color: #ffc107;
+        }
+        .fullscreen-background.work {
+            background-color: #28a745;
+        }
+        .fullscreen-background.break {
+            background-color: #2196f3;
+        }
+        .fullscreen-background.cooldown {
+            background-color: #ffc107;
+        }
+        .fullscreen-timer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 80vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: background-color 0.5s;
-        }
-        .fullscreen-timer.prepare {
-            background-color: #ffc107;
-        }
-        .fullscreen-timer.work {
-            background-color: #28a745;
-        }
-        .fullscreen-timer.break {
-            background-color: #2196f3;
-        }
-        .fullscreen-timer.cooldown {
-            background-color: #ffc107;
         }
         .timer-sets {
             font-size: 72px;
@@ -913,6 +921,11 @@
         }
 
         function handleStartTimer(timer) {
+            // Create fullscreen background
+            const background = document.createElement('div');
+            background.className = 'fullscreen-background prepare';
+            document.body.appendChild(background);
+
             // Create fullscreen overlay
             const fullscreen = document.createElement('div');
             fullscreen.className = 'fullscreen-timer prepare';
@@ -958,6 +971,7 @@
                 phaseDisplay.textContent = phase === 'prepare' ? 'prepare' : phase;
 
                 // Update background color
+                background.className = 'fullscreen-background ' + phase;
                 fullscreen.className = 'fullscreen-timer ' + phase;
             }
 
@@ -993,6 +1007,7 @@
                         playAlert(1200, 1.0, 'square', 0.5, 0.01);
                         setTimeout(() => {
                             fullscreen.remove();
+                            background.remove();
                         }, 2000);
                         return;
                     }
@@ -1019,6 +1034,7 @@
                 if (confirm('Are you sure you want to cancel the timer?')) {
                     clearInterval(intervalId);
                     fullscreen.remove();
+                    background.remove();
                     document.removeEventListener('keydown', handleKeypress);
                 }
             });
@@ -1028,6 +1044,7 @@
                 if (e.key === 'Escape') {
                     clearInterval(intervalId);
                     fullscreen.remove();
+                    background.remove();
                     document.removeEventListener('keydown', handleKeypress);
                 }
             }
