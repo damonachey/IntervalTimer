@@ -990,14 +990,16 @@
                     } else if (phase === 'cooldown') {
                         // Timer complete
                         clearInterval(intervalId);
-                        playAlert();
+                        playAlert(1200, 1.0, 'square', 0.5, 0.01);
                         setTimeout(() => {
                             fullscreen.remove();
                         }, 2000);
                         return;
                     }
-                    playAlert();
+                    playAlert(1200, 1.0, 'square', 0.5, 0.01);
                     updateDisplay();
+                } else if (remainingSeconds <= 3) {
+                    playAlert();
                 }
             }
 
@@ -1036,7 +1038,7 @@
             intervalId = setInterval(tick, 1000);
         }
 
-        function playAlert() {
+        function playAlert(frequency = 800, duration = 0.5, type = 'sine', startGain = 0.3, endGain = 0.01) {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
@@ -1045,14 +1047,14 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
 
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
 
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                gainNode.gain.setValueAtTime(startGain, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(endGain, audioContext.currentTime + duration);
 
                 oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + duration);
             } catch (e) {
                 // Ignore audio errors
             }
